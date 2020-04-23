@@ -1,71 +1,269 @@
-
-
 <!doctype html>
 <html>
 <head>
 <meta charset="utf-8" />
-<title>Looky</title>
-
-<!-- Welcome to ZIM at http://zimjs.com - Code Interactive Media Pizzazz! 	        -->
-<!-- ZIM runs on the HTML Canvas powered by JavaScript and CreateJS http://createjs.com -->
-<!-- Founded by Inventor Dan Zen - http://danzen.com - Canadian New Media Award Winner 	-->
-<!-- ZIM is free to use. You can donate to help improve ZIM at http://zimjs.com/donate 	-->
-
-<script src="js/createjs.js"></script>
+<title>The Bomb</title>
+<script src="https://zimjs.org/cdn/1.3.0/createjs.js"></script>
+<script src="https://zimjs.org/cdn/10.9.0/zim.js"></script>
+<script src="https://zimjs.org/cdn/pizzazz_02.js"></script>
+<script src="https://zimjs.org/cdn/game_2.2.js"></script>
 <script>
-	var zon = true; // set to false to turn off console messages from zim
-	var zns = false; // set to true to require zim namespace - eg. new zim.Frame()
-</script>
-<script src="js/zim.js"></script>
-<!-- use zimjs.com/code/distill for minified individual functions! -->
+// https://zimjs.com - JavaScript Canvas Framework - Code Creativity!
 
-<script>
-
-// SCALING OPTIONS
-// scaling can have values as follows with full being the default
-// "fit"	sets canvas and stage to dimensions and scales to fit inside window size
-// "outside"	sets canvas and stage to dimensions and scales to fit outside window size
-// "full"	sets stage to window size with no scaling
-// "tagID"	add canvas to HTML tag of ID - set to dimensions if provided - no scaling
+var assets = ["heading.png", "assignment.png", "bomb.png", "boom.png", "boom.mp3", "hugebomb.png"];
+var path = "assets/";
+var color = "#6fe4fd";
 
 
-// as of ZIM 5.5.0 you do not need to put zim before ZIM functions and classes
-var frame = new Frame();
-frame.on("ready", function() {
-    zog("ready from ZIM Frame"); // logs in console (F12 - choose console)
 
-    var stage = frame.stage;
-    var stageW = frame.width;
-    var stageH = frame.height;
-    frame.color = frame.pink;
+const frame = new Frame("full", null, null, color, dark, assets, path);
+frame.on("ready", () => {
+    const stage = frame.stage;
+    let stageW = frame.width;
+    let stageH = frame.height;
 
-    // see http://zimjs.com/code/learn.html for video and code tutorials
-    // see http://zimjs.com/code/docs.html for documentation
-    // see http://zimjs.com/code/bits.html for 64 Interactive Media techniques
+    var boom = asset("boom.mp3");
+    
 
-    // put your code here (you can delete this sample code)
+    const manager = new Manager();
 
-    var circle = new Circle(100, frame.blue);
-    circle.center(stage).drag();
+    // PAGE 1
+    
+   
+    
+    const page1 = new Container(stageW, stageH).addTo();
+		page1.header = new Container(stageW, 80).addTo(page1);
+       var heading = frame.asset("heading.png").siz(stageW, 80).center(page1.header);
 
-    frame.on("resize", function() {
-        stageW = frame.width;
-        stageH = frame.height;
-        circle.center(stage);
-        stage.update();
+
+        const header = new Container(500, 60).addTo(page1);
+        const content = new Container(600,800).addTo(page1);
+
+        var assignment = new Container(160,200).addTo(page1);
+
+        var body = frame.asset("assignment.png").siz(250,300).center(assignment);
+
+        assignment.centerReg();
+
+        var s = series(frame.asset("bomb.png").siz(60,60),frame.asset("bomb.png").siz(60,60),frame.asset("bomb.png").siz(60,60),frame.asset("bomb.png").siz(60,60),frame.asset("bomb.png").siz(60,60),);
+
+        var bombs = new Tile({
+            obj:s,
+            cols:5,
+            rows:1,
+            spacingH:10
+        }).center(assignment).mov(0,250).drag();
+            bombs.animate({
+            from:true,
+            wait:500,
+            props:{alpha:0},
+            sequence:250,
+            time:200
+
+        });
+
+        var rule = new Label({
+                            text:"Drag the bomb!",
+                            lineHeight:55,
+                            align:"center",
+                            size: 24,
+                            color:red,
+                            fontOptions:"bold"
+                        }).center(page1).mov(0,-200).animate({props:{scale:1.5}, 
+                time:1500, 
+                rewind:true, 
+                loop:true,
+                ease:"backInOut"});
+
+        bombs.on("pressup", function(){
+            var count = 0;
+            bombs.loop(function(bomb){
+                zog(bomb.type);
+                if(bomb.hitTestBounds(body)){
+                    count ++;
+                }
+            });
+
+
+            const endPane = new Pane ({
+                     width:250,
+                     backgroundColor:"white",
+                     close:true,
+                    });
+     
+                page1.triangle = new Triangle(50,50,50,red)
+                    .rot(90)
+                    .hov(1)
+                    .rot(90)
+                    .center(endPane);   
+               
+
+            if(count == bombs.numChildren){
+                zog("done");
+                assignment.mouseChildren = false;
+                bombs.removeFrom();
+                    new Sprite({image:asset("boom.png"), cols:8, rows:3}).centerReg().run({time:2100}).sca(2.5);
+                    boom.play();
+                    endPane.show();
+                    page1.triangle.on("mousedown", () => {
+                    pages.go(page2, "right");
+                    endPane.removeFrom();
+                });
+                    
+            }
+        });
+
+
+        // stage.update();
+     
+
+    const footer = new Container(500,100).addTo(page1).alp(0);
+    new Tabs().scaleTo(footer).center(footer);
+            
+    manager.add(
+        new Layout(page1, [
+            {object:header, height:10, marginTop:0, valign:CENTER, align:CENTER, maxWidth:80},
+            {object:content, marginTop:5},
+            {object:footer, marginTop:5, maxWidth:50} 
+        ], 5, color, true, new Shape(), stage)
+    );
+    
+    
+    // // PAGE 2
+    
+
+
+
+    const page2 = new Container(stageW, stageH).addTo();
+		page2.header = new Container(stageW, 80).addTo(page2);
+       var heading2 = heading.clone(stageW, 80).center(page2.header);
+
+
+   
+        page2.content = new Container(600,800).addTo(page2);
+
+        var boomer = new Container(160,200).center(page2);
+    
+    var hugebomb = frame.asset("hugebomb.png").siz(300,300).center(boomer);
+
+    var path = new Squiggle({
+        // controlType:"none",
+        points:
+[[41.6,26.2,0,0,-13.7,51.6,13.7,-51.6],[91.3,-40.6,0,0,-28.2,19,28.2,-19],[177.2,-30.9,0,0,-24.6,-14.5,24.6,14.5],[225,59,0,0,-14.6,-55.2,14.6,55.2],[233.9,188.3,0,0,-30,0,30,0]],
+        color:"#d48200",
+        length:900,
+        interactive:false,
+        showControls:false,
+        thickness:15,
+        onTop:false,
+        lockControlType:true,
+        move:false,
+        editPoints:false,
+        interactive:false
+        // strokeObj:{ignoreScale:true}
+        }).center(page2).sca(.8).mov(420,-50).alp(.3);
+    
+    
+    var hurry = new Label({
+                            text:"Hurry!",
+                            lineHeight:55,
+                            align:"center",
+                            size: 36,
+                            color:red,
+                            fontOptions:"bold"
+                        }).center(page2).animate({props:{scale:2}, 
+                time:1700, 
+                rewind:true, 
+                loop:true,
+                ease:"backInOut"});
+    
+    var fire = new Sprite({image:asset("boom.png"), cols:8, rows:3}).centerReg(page2).sca(.2).animate({ props:{path:path, orient:true},
+                        rewind: true,
+                        loop: true,
+            ease:"linear",
+            time:300000
+          });
+          fire.percentComplete = 50;
+
+          const endPane2 = new Pane ({
+                     width:250,
+                     backgroundColor:"white",
+                     close:true,
+                    });
+     
+                page2.triangle2 = new Triangle(50,50,50,red)
+                    .rot(270)
+                    .hov(1)
+                    .center(endPane2);   
+
+          Ticker.add(function(){
+        boomer.loop(function(hugebomb){
+            if(hugebomb.hitTestReg(fire)){
+                    new Sprite(asset("boom.png"),8,3)
+                            .centerReg(page2)
+                            .sca(2.5)
+                            .run();
+                            boom.play();
+                hurry.removeFrom();
+                hugebomb.removeFrom();
+                path.removeFrom();
+                fire.removeFrom();
+                endPane2.show();
+                page2.triangle2.on("mousedown", () => {
+                    pages.go(page1, "left");
+                    endPane2.removeFrom();
+                });
+                }
+            }, true);
+        });
+    
+
+    page2.footer = new Container(500,100).addTo(page2).alp(1);
+    page2.triangle = new Triangle(100,100,100,red)
+        .alp(.8)
+        .hov(1)
+        .rot(-90)
+        .center(page2.footer);
+        page2.triangle.on("mousedown", () => {
+        pages.go(page1, "left");
     });
 
-    stage.update(); // this is needed to show any changes
+    manager.add(
+        new Layout(page2, [
+            {object:page2.header, height:10, marginTop:0, valign:CENTER, align:CENTER, maxWidth:80},
+            {object:page2.content, marginTop:5},
+            {object:page2.footer, marginTop:5, maxWidth:50} 
+        ], 5, green, true, new Shape(), stage)
+    );
 
-}); // end of ready
+    const pages = new Pages([
+        {page:page1, swipe:[page2, page2, "help", "help"]},
+        {page:page2, swipe:[page1, page1, "help", "help"]}
+    ], "slide", 700).addTo();
+
+    pages.on("help", () => {
+        if (pages.page == page2) {
+            zogg("helping");
+        } else {
+            zogr("helping");
+        }
+    });
+
+    
+    
+    
+    manager.dispose();
+    frame.on("resize", () => {
+        // stageW = frame.width;
+        // stageH = frame.height; 
+        manager.resize();       
+    });
+
+    stage.update();
+});
 
 </script>
-
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-
+<meta name="viewport" content="width=device-width, user-scalable=no" />
 </head>
-
-<body>
-<!-- canvas with id="myCanvas" is made by zim Frame -->
-</body>
+<body></body>
 </html>
